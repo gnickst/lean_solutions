@@ -1,0 +1,38 @@
+def do_twice (f: ℕ → ℕ) (x: ℕ ) : ℕ := f (f x)
+
+def curry (α β γ : Type) (f : α × β → γ) : α → β → γ := λ (x: α) (y: β), f (x,y)
+
+def uncurry (α β γ : Type) (f : α → β → γ) : α × β → γ :=
+    λ (xy: (α × β)), f (xy.1) (xy.2)
+
+universe u
+constant vec : Type u → ℕ → Type u
+
+namespace vec
+    constant empty : Π {α : Type u}, vec α 0
+    constant cons : Π {α : Type u} {n : ℕ}, α → vec α n -> vec α (n+1)
+    constant append : Π {α : Type u} {n m : ℕ}, vec α n → vec α m → vec α (n+m)
+    constant vec_add : Π {n : ℕ}, vec ℕ n -> vec ℕ n -> vec ℕ n
+    constant vec_reverse : Π {α : Type u} {n : ℕ}, vec α n -> vec α n
+end vec
+
+#check @vec.cons _ _ 57 (vec.empty)
+#check vec.vec_add (vec.empty) (vec.empty)
+#check @vec.vec_reverse _ 57
+
+constant matrix : Type u → ℕ → ℕ → Type u
+namespace matrix
+    constant empty : Π {α : Type u}, matrix α 0 0
+    constant sum : Π {α : Type u} {m n : ℕ}, matrix α m n → matrix α m n → matrix α m n
+    constant mmul : Π {α : Type u} {m n p : ℕ}, matrix α m n → matrix α n p → matrix α m p
+    constant vmul : Π {α: Type u} {m n : ℕ}, matrix α m n → vec α n → vec α m
+end matrix
+
+variable α : Type u
+variable m0: matrix α 2 3
+variable m1: matrix α 3 4
+variable v : vec α 3
+
+#check matrix.empty
+#check matrix.mmul m0 m1
+#check matrix.vmul m0 v
