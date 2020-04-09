@@ -1,0 +1,76 @@
+variables p q r : Prop
+
+-- commutativity of ∧ and ∨
+theorem conj_comm : p ∧ q ↔ q ∧ p := iff.intro
+    (λ pq, and.intro pq.2 pq.1)
+    (λ qp, and.intro qp.2 qp.1)
+theorem disj_comm : p ∨ q ↔ q ∨ p := iff.intro
+    (λ pq, or.elim pq (λ p, or.inr p) (λ q, or.inl q))
+    (λ qp, or.elim qp (λ q, or.inr q) (λ p, or.inl p))
+
+-- associativity of ∧ and ∨
+theorem conj_assoc : (p ∧ q) ∧ r ↔ p ∧ (q ∧ r) := iff.intro
+    (λ hpqr,
+        have hpq : p ∧ q, from and.left hpqr,
+        have hp : p, from and.left hpq,
+        have hq : q, from and.right hpq,
+        have hr : r, from and.right hpqr,
+        show p ∧ (q ∧ r), from and.intro hp (and.intro hq hr)
+    )
+    (λ hpqr,
+        have hqr : q ∧ r, from and.right hpqr,
+        have hp : p, from and.left hpqr,
+        have hq : q, from and.left hqr,
+        have hr : r, from and.right hqr,
+        show (p ∧ q) ∧ r, from and.intro (and.intro hp hq) hr
+    )
+theorem disj_assoc : (p ∨ q) ∨ r ↔ p ∨ (q ∨ r) := iff.intro
+    (λ hpqr, or.elim hpqr
+        (λ hpq, or.elim hpq (λ hp, or.inl hp) (λ hq, or.inr (or.inl hq)))
+        (λ hr, or.inr (or.inr hr))
+    )
+    (λ hpqr, or.elim hpqr
+        (λ hp, or.inl (or.inl hp))
+        (λ hqr, or.elim hqr (λ hq, or.inl (or.inr hq)) (λ hr, or.inr hr))
+    )
+
+-- distributivity
+example : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) := sorry
+example : p ∨ (q ∧ r) ↔ (p ∨ q) ∧ (p ∨ r) := sorry
+
+-- other properties
+theorem conj_uncurry : (p → (q → r)) ↔ (p ∧ q → r) := iff.intro
+    (λ curried,
+        assume hpq : p ∧ q,
+        have hp : p, from and.left hpq,
+        have hq : q, from and.right hpq,
+        curried hp hq
+    )
+    (λ uncurried,
+        assume hp,
+        assume hq,
+        have hpq : p ∧ q, from and.intro hp hq,
+        uncurried hpq
+    )
+
+theorem disj_impl : ((p ∨ q) → r) ↔ (p → r) ∧ (q → r) := iff.intro
+    (λ ante,
+        have hpr : p → r, from λ hp, ante (or.inl hp),
+        have hqr : q → r, from λ hq, ante (or.inr hq),
+        and.intro hpr hqr
+    )
+    (λ antes,
+        have hpr : p → r, from and.left antes,
+        have hqr : q → r, from and.right antes,
+        λ hpq, or.elim hpq hpr hqr
+    )
+example : ¬(p ∨ q) ↔ ¬p ∧ ¬q := sorry
+example : ¬p ∨ ¬q → ¬(p ∧ q) := sorry
+example : ¬(p ∧ ¬p) := sorry
+example : p ∧ ¬q → ¬(p → q) := sorry
+example : ¬p → (p → q) := sorry
+example : (¬p ∨ q) → (p → q) := sorry
+example : p ∨ false ↔ p := sorry
+example : p ∧ false ↔ false := sorry
+example : ¬(p ↔ ¬p) := sorry
+example : (p → q) → (¬q → ¬p) := sorry
