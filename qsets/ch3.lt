@@ -64,13 +64,70 @@ theorem disj_impl : ((p ∨ q) → r) ↔ (p → r) ∧ (q → r) := iff.intro
         have hqr : q → r, from and.right antes,
         λ hpq, or.elim hpq hpr hqr
     )
-example : ¬(p ∨ q) ↔ ¬p ∧ ¬q := sorry
-example : ¬p ∨ ¬q → ¬(p ∧ q) := sorry
-example : ¬(p ∧ ¬p) := sorry
-example : p ∧ ¬q → ¬(p → q) := sorry
-example : ¬p → (p → q) := sorry
-example : (¬p ∨ q) → (p → q) := sorry
-example : p ∨ false ↔ p := sorry
-example : p ∧ false ↔ false := sorry
-example : ¬(p ↔ ¬p) := sorry
-example : (p → q) → (¬q → ¬p) := sorry
+
+variables p q r : Prop
+
+theorem dm_law : ¬(p ∨ q) ↔ ¬p ∧ ¬q := iff.intro
+  ( assume nporq,
+    have np : ¬p, from λ p, nporq (or.inl p),
+    have nq : ¬q, from λ q, nporq (or.inr q),
+    and.intro np nq
+  )
+  ( assume npandnq,
+    have np : ¬p, from and.left npandnq,
+    have nq : ¬q, from and.right npandnq,
+    λ porq, or.elim porq np nq
+  )
+
+theorem dm_law_ish : ¬p ∨ ¬q → ¬(p ∧ q) :=
+    assume npornq,
+    assume pandq,
+    have hp : p, from and.left pandq,
+    have hq : q, from and.right pandq,
+    or.elim npornq (λ np: ¬p, np hp) (λ nq: ¬q, nq hq)
+
+theorem non_contra : ¬(p ∧ ¬p) :=
+    assume pandnp,
+    have hnp: ¬p, from and.right pandnp,
+    have hp: p, from and.left pandnp,
+    hnp hp
+
+theorem truth_table_impl : p ∧ ¬q → ¬(p → q) :=
+    assume hpandnq,
+    have hp: p, from and.left hpandnq,
+    have hnq: ¬q, from and.right hpandnq,
+    assume hptoq,
+    have hq: q, from hptoq hp,
+    hnq hq
+
+example : ¬p → (p → q) :=
+    assume hnp,
+    assume hp,
+    absurd hp hnp
+
+example : (¬p ∨ q) → (p → q) :=
+    assume hnporq,
+    assume hp,
+    or.elim hnporq (λ hnp, absurd hp hnp) id
+
+theorem lem_esque : p ∨ false ↔ p := iff.intro
+    (λ hporf, or.elim hporf id false.elim)
+    or.inl
+
+theorem no_and : p ∧ false ↔ false := iff.intro
+    and.right
+    false.elim
+
+-- These below require classical.
+open classical
+
+theorem dne_ish : ¬(p ↔ ¬p) :=
+    assume hiff: p ↔ ¬p,
+    have hptonp : p → ¬p, from iff.elim_left hiff,
+    have hnptop : ¬p → p, from iff.elim_right hiff,
+    or.elim (em p) (λ hp, absurd hp (hptonp hp)) (λ hnp, absurd (hnptop hnp) hnp)
+
+theorem contrapositive : (p → q) → (¬q → ¬p) :=
+    assume hptoq,
+    assume hnq,
+    or.elim (em p) (λ hp, absurd (hptoq hp) hnq) id
